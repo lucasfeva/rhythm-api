@@ -6,12 +6,17 @@
   "scripts": {
     "dev": "tsx --watch src/index.ts"
   },
+  "engines": {
+    "node": "24.x"
+  },
   "keywords": [],
   "author": "Lucasfeva",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^24.10.13",
     "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3"
   }
