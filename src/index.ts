@@ -7,6 +7,7 @@ import {
 } from "fastify-type-provider-zod";
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUI from "@fastify/swagger-ui";
+import fastifyApiReference from "@scalar/fastify-api-reference";
 import z from "zod";
 import { auth } from "./lib/auth.js";
 import fastifyCors from "@fastify/cors";
@@ -35,8 +36,33 @@ await app.register(fastifySwagger, {
   transform: jsonSchemaTransform,
 });
 
-await app.register(fastifySwaggerUI, {
+await app.register(fastifyApiReference, {
   routePrefix: "/docs",
+  configuration: {
+    sources: [
+      {
+        title: "Rhythm API",
+        slug: "rhythm-api",
+        url: "/swagger.json",
+      },
+      {
+        title: "Auth API",
+        slug: "auth-api",
+        url: "/api/auth/open-api/generate-schema",
+      },
+    ],
+  },
+});
+
+app.withTypeProvider<ZodTypeProvider>().route({
+  method: "GET",
+  url: "/swagger.json",
+  schema: {
+    hide: true,
+  },
+  handler: async () => {
+    return app.swagger();
+  },
 });
 
 await app.register(fastifyCors, {
