@@ -8,14 +8,9 @@ import {
 } from "fastify-type-provider-zod";
 import fastifySwagger from "@fastify/swagger";
 import fastifyApiReference from "@scalar/fastify-api-reference";
-import z from "zod";
 import { auth } from "./lib/auth.js";
 import fastifyCors from "@fastify/cors";
-import { WeekDay } from "./generated/prisma/enums.js";
-import { CreateWorkoutPlan } from "./usecases/CreateWorkoutPlans.js";
-import { fromNodeHeaders } from "better-auth/node";
-import { NotFoundError } from "./errors/index.js";
-import { error } from "console";
+import { workoutPlanRoutes } from "./routes/workout-plan.js";
 
 const app = Fastify({
   logger: true,
@@ -60,110 +55,6 @@ await app.register(fastifyApiReference, {
 });
 
 app.withTypeProvider<ZodTypeProvider>().route({
-  method: "POST",
-  url: "/workout-plans",
-  schema: {
-    body: z.object({
-      name: z.string().trim().min(1),
-      workoutDays: z.array(
-        z.object({
-          name: z.string().trim().min(1),
-          weekDay: z.enum(WeekDay),
-          isRest: z.boolean().default(false),
-          estimatedDurationInSeconds: z.number().min(1),
-          exercises: z.array(
-            z.object({
-              name: z.string().trim().min(1),
-              order: z.number().min(0),
-              sets: z.number().min(1),
-              reps: z.number().min(1),
-              restTimeInSeconds: z.number().min(1),
-            }),
-          ),
-        }),
-      ),
-    }),
-    description: "create a new workout plan",
-    tags: ["workout-plans"],
-    response: {
-      201: z.object({
-        id: z.uuid(),
-        name: z.string().trim().min(1),
-        workoutDays: z.array(
-          z.object({
-            name: z.string().trim().min(1),
-            weekDay: z.enum(WeekDay),
-            isRest: z.boolean().default(false),
-            estimatedDurationInSeconds: z.number().min(1),
-            exercises: z.array(
-              z.object({
-                name: z.string().trim().min(1),
-                order: z.number().min(0),
-                sets: z.number().min(1),
-                reps: z.number().min(1),
-                restTimeInSeconds: z.number().min(1),
-              }),
-            ),
-          }),
-        ),
-      }),
-      400: z.object({
-        error: z.string(),
-        code: z.string(),
-      }),
-      401: z.object({
-        error: z.string(),
-        code: z.string(),
-      }),
-      404: z.object({
-        error: z.string(),
-        code: z.string(),
-      }),
-      500: z.object({
-        error: z.string(),
-        code: z.string(),
-      }),
-    },
-  },
-  handler: async (request, reply) => {
-    try {
-      const session = await auth.api.getSession({
-        headers: fromNodeHeaders(request.headers),
-      });
-
-      if (!session) {
-        return reply.status(401).send({
-          error: "Unauthorized",
-          code: "UNAUTHORIZED",
-        });
-      }
-
-      const createWorkoutPlan = new CreateWorkoutPlan();
-
-      const result = await createWorkoutPlan.execute({
-        userId: session.user.id,
-        name: request.body.name,
-        workoutDays: request.body.workoutDays,
-      });
-
-      return reply.status(201).send(result);
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        return reply.status(404).send({
-          error: error.message,
-          code: "NOT_FOUND",
-        });
-      }
-
-      return reply.status(500).send({
-        error: "Internal server error",
-        code: "INTERNAL_SERVER_ERROR",
-      });
-    }
-  },
-});
-
-app.withTypeProvider<ZodTypeProvider>().route({
   method: "GET",
   url: "/swagger.json",
   schema: {
@@ -179,24 +70,8 @@ await app.register(fastifyCors, {
   credentials: true,
 });
 
-app.withTypeProvider<ZodTypeProvider>().route({
-  method: "GET",
-  url: "/",
-  schema: {
-    description: "Hello world",
-    tags: ["test"],
-    response: {
-      200: z.object({
-        message: z.string(),
-      }),
-    },
-  },
-  handler: () => {
-    return {
-      message: "Hello world",
-    };
-  },
-});
+// routes
+await app.register(workoutPlanRoutes, { prefix: "/workout-plans" });
 
 app.route({
   method: ["GET", "POST"],
