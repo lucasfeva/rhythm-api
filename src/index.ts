@@ -11,6 +11,7 @@ import fastifyApiReference from "@scalar/fastify-api-reference";
 import { auth } from "./lib/auth.js";
 import fastifyCors from "@fastify/cors";
 import { workoutPlanRoutes } from "./routes/workout-plan.js";
+import { homeRoutes } from "./routes/home.js";
 
 const app = Fastify({
   logger: true,
@@ -72,6 +73,7 @@ await app.register(fastifyCors, {
 
 // routes
 await app.register(workoutPlanRoutes, { prefix: "/workout-plans" });
+await app.register(homeRoutes, { prefix: "/home" });
 
 app.route({
   method: ["GET", "POST"],
