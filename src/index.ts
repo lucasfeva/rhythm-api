@@ -13,6 +13,7 @@ import fastifyCors from "@fastify/cors";
 import { workoutPlanRoutes } from "./routes/workout-plan.js";
 import { homeRoutes } from "./routes/home.js";
 import { statsRoutes } from "./routes/stats.js";
+import { meRoutes } from "./routes/me.js";
 
 const app = Fastify({
   logger: true,
@@ -76,6 +77,7 @@ await app.register(fastifyCors, {
 await app.register(workoutPlanRoutes, { prefix: "/workout-plans" });
 await app.register(homeRoutes, { prefix: "/home" });
 await app.register(statsRoutes, { prefix: "/stats" });
+await app.register(meRoutes, { prefix: "/me" });
 
 app.route({
   method: ["GET", "POST"],
